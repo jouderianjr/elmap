@@ -3,7 +3,6 @@ module Main exposing (..)
 -- component import example
 
 import Array
-import Components.Hello exposing (hello)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
