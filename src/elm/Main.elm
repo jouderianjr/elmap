@@ -131,7 +131,7 @@ view : Model -> Html Msg
 view model =
     div
         []
-        [ input [ type_ "text", onInput OnInputTyped, value model.inputValue, style [ ( "width", "400px" ) ] ] []
+        [ input [ type_ "text", onInput OnInputTyped, value model.inputValue, style Styles.inputText ] []
         , renderDropdown model
         ]
 
