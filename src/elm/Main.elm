@@ -14,9 +14,9 @@ import Styles exposing (..)
 -- APP
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
@@ -33,17 +33,22 @@ type alias Model =
     , suggestions : List String
     , selectedIndex : Int
     , isActive : Bool
+    , gmapsApiKey : String
     }
+
+
+type alias Flags =
+    { gmapsApiKey : String }
 
 
 model : Model
 model =
-    Model "" [] 0 False
+    Model "" [] 0 False ""
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( model, Cmd.none )
+init : Flags -> ( Model, Cmd Msg )
+init { gmapsApiKey } =
+    ( { model | gmapsApiKey = gmapsApiKey }, Cmd.none )
 
 
 
