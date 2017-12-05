@@ -5,7 +5,7 @@ module Main exposing (..)
 import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onMouseDown, onMouseOver)
 import Keyboard
 import Styles exposing (..)
 
@@ -59,6 +59,7 @@ type Msg
     | OnInputTyped String
     | OnKeyDown Keyboard.KeyCode
     | SelectedSuggestion
+    | OnMouseSelection Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,6 +67,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        OnMouseSelection newIndex ->
+            ( { model | selectedIndex = newIndex }, Cmd.none )
 
         SelectedSuggestion ->
             let
@@ -80,7 +84,7 @@ update msg model =
                         Nothing ->
                             ""
             in
-            ( { model | inputValue = suggestion, selectedIndex = 0 }, Cmd.none )
+            ( { model | inputValue = suggestion, selectedIndex = 0, isActive = False }, Cmd.none )
 
         OnInputTyped value ->
             ( { model
@@ -117,7 +121,7 @@ update msg model =
                     ( { model | isActive = False, selectedIndex = 0 }, Cmd.none )
 
                 13 ->
-                    update SelectedSuggestion { model | isActive = False }
+                    update SelectedSuggestion model
 
                 _ ->
                     ( model, Cmd.none )
@@ -157,16 +161,13 @@ renderSuggestions : List String -> Int -> List (Html Msg)
 renderSuggestions suggestions selectedIndex =
     List.indexedMap
         (\index item ->
-            if selectedIndex == index then
-                renderSuggestion item True
-            else
-                renderSuggestion item False
+            renderSuggestion item index <| selectedIndex == index
         )
         suggestions
 
 
-renderSuggestion : String -> Bool -> Html Msg
-renderSuggestion suggestion isSelected =
+renderSuggestion : String -> Int -> Bool -> Html Msg
+renderSuggestion suggestion index isSelected =
     let
         suggestionStyle =
             if isSelected then
@@ -175,8 +176,9 @@ renderSuggestion suggestion isSelected =
                 Styles.dropdownItem
     in
     p
-        [ style
-            suggestionStyle
+        [ style suggestionStyle
+        , onMouseOver <| OnMouseSelection index
+        , onMouseDown SelectedSuggestion
         ]
         [ text suggestion ]
 
