@@ -6,8 +6,11 @@ import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput)
+import Http
+import Json.Decode as Decode
 import Keyboard
 import Styles exposing (..)
+import Types exposing (Location, Place)
 
 
 -- APP
@@ -33,6 +36,7 @@ type alias Model =
     , selectedIndex : Int
     , isActive : Bool
     , gmapsApiKey : String
+    , places : Maybe (List Place)
     }
 
 
@@ -42,7 +46,7 @@ type alias Flags =
 
 model : Model
 model =
-    Model "" [] 0 False ""
+    Model "" [] 0 False "" Nothing
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -59,6 +63,7 @@ type Msg
     | OnInputTyped String
     | OnKeyDown Keyboard.KeyCode
     | SelectedSuggestion
+    | GetPlaces (Result Http.Error Arroz)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -80,7 +85,7 @@ update msg model =
                         Nothing ->
                             ""
             in
-            ( { model | inputValue = suggestion, selectedIndex = 0 }, Cmd.none )
+            ( { model | inputValue = suggestion, selectedIndex = 0 }, getData model )
 
         OnInputTyped value ->
             ( { model
@@ -121,6 +126,13 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        GetPlaces a ->
+            let
+                c =
+                    Debug.log <| toString a
+            in
+            ( model, Cmd.none )
 
 
 
@@ -205,3 +217,21 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Keyboard.downs OnKeyDown ]
+
+
+getData model =
+    let
+        url =
+            "https://maps.googleapis.com/maps/api/place/queryautocomplete/json?input=" ++ model.inputValue ++ "&key=" ++ model.gmapsApiKey
+    in
+    Http.send GetPlaces (Http.get url decodeData)
+
+
+type alias Arroz =
+    { next_page_token : String }
+
+
+decodeData : Decode.Decoder Arroz
+decodeData =
+    Decode.map Arroz
+        (Decode.field "status" Decode.string)
