@@ -12,4 +12,4 @@ type alias Place =
 
 
 type alias Location =
-    { lat : String, lng : String }
+    { lat : Float, lng : Float }

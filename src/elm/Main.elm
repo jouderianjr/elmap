@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 -- component import example
 
@@ -22,6 +22,9 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
+
+
+port addMarker : Location -> Cmd msg
 
 
 
@@ -84,8 +87,16 @@ update msg model =
 
                         Nothing ->
                             ""
+
+                suggestionLocation =
+                    case Array.get model.selectedIndex suggestionsArray of
+                        Just item ->
+                            item.location
+
+                        Nothing ->
+                            Location 0 0
             in
-            ( { model | inputValue = suggestion, selectedIndex = 0, isActive = False }, Cmd.none )
+            ( { model | inputValue = suggestion, selectedIndex = 0, isActive = False }, addMarker suggestionLocation )
 
         OnInputTyped value ->
             ( { model
@@ -205,26 +216,26 @@ mockList : Places
 mockList =
     [ { name = "Shopping Aldeota"
       , location =
-            { lat = "-3.7316221"
-            , lng = "-38.5007595"
+            { lat = -3.7316221
+            , lng = -38.5007595
             }
       }
     , { name = "Shopping Del Paseo"
       , location =
-            { lat = "-3.734473"
-            , lng = "-38.503402"
+            { lat = -3.734473
+            , lng = -38.503402
             }
       }
     , { name = "Shopping Iguatemi"
       , location =
-            { lat = "-3.7355923"
-            , lng = "-38.5175581"
+            { lat = -3.7355923
+            , lng = -38.5175581
             }
       }
     , { name = "Via Sul"
       , location =
-            { lat = "-3.7947486"
-            , lng = "-38.4821157"
+            { lat = -3.7947486
+            , lng = -38.4821157
             }
       }
     ]

@@ -36,6 +36,7 @@
     "webpack-merge": "^4.1.0"
   },
   "dependencies": {
-    "dotenv": "^4.0.0"
+    "dotenv": "^4.0.0",
+    "load-google-maps-api": "^1.0.0"
   }
 }
