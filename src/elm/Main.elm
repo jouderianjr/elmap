@@ -136,6 +136,16 @@ view model =
         ]
 
 
+
+-- Subscribe
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Keyboard.downs OnKeyDown ]
+
+
 renderDropdown : Model -> Html Msg
 renderDropdown model =
     div
@@ -195,13 +205,3 @@ mockList =
     , "Pedro"
     , "Paulo"
     ]
-
-
-
--- Subscribe
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ Keyboard.downs OnKeyDown ]
