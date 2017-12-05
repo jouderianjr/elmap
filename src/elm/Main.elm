@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onMouseDown, onMouseOver)
 import Keyboard
 import Styles exposing (..)
+import Types exposing (Location, Place, Places)
 
 
 -- APP
@@ -29,7 +30,7 @@ main =
 
 type alias Model =
     { inputValue : String
-    , suggestions : List String
+    , suggestions : Places
     , selectedIndex : Int
     , isActive : Bool
     , gmapsApiKey : String
@@ -79,7 +80,7 @@ update msg model =
                 suggestion =
                     case Array.get model.selectedIndex suggestionsArray of
                         Just item ->
-                            item
+                            item.name
 
                         Nothing ->
                             ""
@@ -157,11 +158,11 @@ renderDropdown model =
         (renderSuggestions model.suggestions model.selectedIndex)
 
 
-renderSuggestions : List String -> Int -> List (Html Msg)
+renderSuggestions : Places -> Int -> List (Html Msg)
 renderSuggestions suggestions selectedIndex =
     List.indexedMap
         (\index item ->
-            renderSuggestion item index <| selectedIndex == index
+            renderSuggestion item.name index <| selectedIndex == index
         )
         suggestions
 
@@ -183,7 +184,7 @@ renderSuggestion suggestion index isSelected =
         [ text suggestion ]
 
 
-filterSuggestions : List String -> String -> List String
+filterSuggestions : Places -> String -> Places
 filterSuggestions allData term =
     let
         lowerTerm =
@@ -191,6 +192,7 @@ filterSuggestions allData term =
 
         startsWith dataItem =
             dataItem
+                |> .name
                 |> String.toLower
                 |> String.startsWith lowerTerm
     in
@@ -199,11 +201,30 @@ filterSuggestions allData term =
         allData
 
 
-mockList : List String
+mockList : Places
 mockList =
-    [ "Jouderian"
-    , "Joao"
-    , "Jordana"
-    , "Pedro"
-    , "Paulo"
+    [ { name = "Shopping Aldeota"
+      , location =
+            { lat = "-3.7316221"
+            , lng = "-38.5007595"
+            }
+      }
+    , { name = "Shopping Del Paseo"
+      , location =
+            { lat = "-3.734473"
+            , lng = "-38.503402"
+            }
+      }
+    , { name = "Shopping Iguatemi"
+      , location =
+            { lat = "-3.7355923"
+            , lng = "-38.5175581"
+            }
+      }
+    , { name = "Via Sul"
+      , location =
+            { lat = "-3.7947486"
+            , lng = "-38.4821157"
+            }
+      }
     ]
