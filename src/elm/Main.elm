@@ -99,10 +99,17 @@ update msg model =
             ( { model | inputValue = suggestion, selectedIndex = 0, isActive = False }, addMarker suggestionLocation )
 
         OnInputTyped value ->
+            let
+                filteredSuggestions =
+                    if value /= "" then
+                        filterSuggestions mockList value
+                    else
+                        []
+            in
             ( { model
                 | inputValue = value
-                , suggestions = filterSuggestions mockList value
-                , isActive = True
+                , suggestions = filteredSuggestions
+                , isActive = value /= ""
               }
             , Cmd.none
             )
