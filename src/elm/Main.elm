@@ -146,7 +146,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
-        []
+        [ style Styles.dropdownWrapper ]
         [ input [ type_ "text", onInput OnInputTyped, value model.inputValue, style Styles.inputText ] []
         , renderDropdown model
         ]
