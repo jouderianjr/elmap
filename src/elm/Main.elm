@@ -1,8 +1,6 @@
 port module Main exposing (..)
 
--- component import example
-
-import Api exposing (fetchData)
+import Api exposing (fetchPlace, fetchSuggestions)
 import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -10,7 +8,7 @@ import Html.Events exposing (onInput, onMouseDown, onMouseOver)
 import Http
 import Keyboard
 import Styles exposing (..)
-import Types exposing (Location, Place, Places)
+import Types exposing (Location, Place, Suggestion, Suggestions)
 
 
 -- APP
@@ -35,7 +33,7 @@ port addMarker : Location -> Cmd msg
 
 type alias Model =
     { inputValue : String
-    , suggestions : Places
+    , suggestions : Suggestions
     , selectedIndex : Int
     , isActive : Bool
     , gmapsApiKey : String
@@ -67,7 +65,8 @@ type Msg
     | OnKeyDown Keyboard.KeyCode
     | SelectedSuggestion
     | OnMouseSelection Int
-    | FetchData (Result Http.Error Places)
+    | FetchSuggestions (Result Http.Error Suggestions)
+    | FetchPlace (Result Http.Error Place)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -79,10 +78,16 @@ update msg model =
         OnMouseSelection newIndex ->
             ( { model | selectedIndex = newIndex }, Cmd.none )
 
-        FetchData (Ok suggestions) ->
+        FetchSuggestions (Ok suggestions) ->
             ( { model | suggestions = suggestions }, Cmd.none )
 
-        FetchData (Err err) ->
+        FetchSuggestions (Err err) ->
+            ( { model | err = toString err }, Cmd.none )
+
+        FetchPlace (Ok place) ->
+            ( model, addMarker place.location )
+
+        FetchPlace (Err err) ->
             ( { model | err = toString err }, Cmd.none )
 
         SelectedSuggestion ->
@@ -93,27 +98,26 @@ update msg model =
                 suggestion =
                     case Array.get model.selectedIndex suggestionsArray of
                         Just item ->
-                            item.address
+                            item
 
                         Nothing ->
-                            ""
+                            Suggestion "" ""
 
-                suggestionLocation =
-                    case Array.get model.selectedIndex suggestionsArray of
-                        Just item ->
-                            item.location
+                description =
+                    suggestion.description
 
-                        Nothing ->
-                            Location 0 0
+                command =
+                    fetchPlace model.gmapsApiKey suggestion.id
+                        |> Http.send FetchPlace
             in
-            ( { model | inputValue = suggestion, selectedIndex = 0, isActive = False }, addMarker suggestionLocation )
+            ( { model | inputValue = description, selectedIndex = 0, isActive = False }, command )
 
         OnInputTyped value ->
             let
                 command =
                     if value /= "" then
-                        fetchData model.gmapsApiKey value
-                            |> Http.send FetchData
+                        fetchSuggestions model.gmapsApiKey value
+                            |> Http.send FetchSuggestions
                     else
                         Cmd.none
             in
@@ -182,11 +186,11 @@ renderDropdown model =
         (renderSuggestions model.suggestions model.selectedIndex)
 
 
-renderSuggestions : Places -> Int -> List (Html Msg)
+renderSuggestions : Suggestions -> Int -> List (Html Msg)
 renderSuggestions suggestions selectedIndex =
     List.indexedMap
         (\index item ->
-            renderSuggestion item.address index <| selectedIndex == index
+            renderSuggestion item.description index <| selectedIndex == index
         )
         suggestions
 
@@ -206,20 +210,3 @@ renderSuggestion suggestion index isSelected =
         , onMouseDown SelectedSuggestion
         ]
         [ text suggestion ]
-
-
-filterSuggestions : Places -> String -> Places
-filterSuggestions allData term =
-    let
-        lowerTerm =
-            String.toLower term
-
-        startsWith dataItem =
-            dataItem
-                |> .address
-                |> String.toLower
-                |> String.startsWith lowerTerm
-    in
-    List.filter
-        startsWith
-        allData

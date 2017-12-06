@@ -7,9 +7,13 @@ type alias Place =
     }
 
 
-type alias Places =
-    List Place
-
-
 type alias Location =
     { lat : Float, lng : Float }
+
+
+type alias Suggestion =
+    { description : String, id : String }
+
+
+type alias Suggestions =
+    List Suggestion
