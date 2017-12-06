@@ -209,4 +209,4 @@ renderSuggestion suggestion index isSelected =
         , onMouseOver <| OnMouseSelection index
         , onMouseDown SelectedSuggestion
         ]
-        [ text suggestion ]
+        [ text <| String.left 50 suggestion ]
