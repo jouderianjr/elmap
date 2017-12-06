@@ -1,14 +1,14 @@
 module Types exposing (..)
 
 
-type alias Places =
-    List Place
-
-
 type alias Place =
-    { name : String
+    { address : String
     , location : Location
     }
+
+
+type alias Places =
+    List Place
 
 
 type alias Location =

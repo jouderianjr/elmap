@@ -2,10 +2,12 @@ port module Main exposing (..)
 
 -- component import example
 
+import Api exposing (fetchData)
 import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onMouseDown, onMouseOver)
+import Http
 import Keyboard
 import Styles exposing (..)
 import Types exposing (Location, Place, Places)
@@ -37,6 +39,7 @@ type alias Model =
     , selectedIndex : Int
     , isActive : Bool
     , gmapsApiKey : String
+    , err : String
     }
 
 
@@ -46,7 +49,7 @@ type alias Flags =
 
 model : Model
 model =
-    Model "" [] 0 False ""
+    Model "" [] 0 False "" ""
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -64,6 +67,7 @@ type Msg
     | OnKeyDown Keyboard.KeyCode
     | SelectedSuggestion
     | OnMouseSelection Int
+    | FetchData (Result Http.Error Places)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -75,6 +79,12 @@ update msg model =
         OnMouseSelection newIndex ->
             ( { model | selectedIndex = newIndex }, Cmd.none )
 
+        FetchData (Ok suggestions) ->
+            ( { model | suggestions = suggestions }, Cmd.none )
+
+        FetchData (Err err) ->
+            ( { model | err = toString err }, Cmd.none )
+
         SelectedSuggestion ->
             let
                 suggestionsArray =
@@ -83,7 +93,7 @@ update msg model =
                 suggestion =
                     case Array.get model.selectedIndex suggestionsArray of
                         Just item ->
-                            item.name
+                            item.address
 
                         Nothing ->
                             ""
@@ -100,19 +110,14 @@ update msg model =
 
         OnInputTyped value ->
             let
-                filteredSuggestions =
+                command =
                     if value /= "" then
-                        filterSuggestions mockList value
+                        fetchData model.gmapsApiKey value
+                            |> Http.send FetchData
                     else
-                        []
+                        Cmd.none
             in
-            ( { model
-                | inputValue = value
-                , suggestions = filteredSuggestions
-                , isActive = value /= ""
-              }
-            , Cmd.none
-            )
+            ( { model | inputValue = value, isActive = value /= "" }, command )
 
         OnKeyDown keycode ->
             case keycode of
@@ -156,6 +161,7 @@ view model =
         [ style Styles.dropdownWrapper ]
         [ input [ type_ "text", onInput OnInputTyped, value model.inputValue, style Styles.inputText ] []
         , renderDropdown model
+        , text model.err
         ]
 
 
@@ -180,7 +186,7 @@ renderSuggestions : Places -> Int -> List (Html Msg)
 renderSuggestions suggestions selectedIndex =
     List.indexedMap
         (\index item ->
-            renderSuggestion item.name index <| selectedIndex == index
+            renderSuggestion item.address index <| selectedIndex == index
         )
         suggestions
 
@@ -210,39 +216,10 @@ filterSuggestions allData term =
 
         startsWith dataItem =
             dataItem
-                |> .name
+                |> .address
                 |> String.toLower
                 |> String.startsWith lowerTerm
     in
     List.filter
         startsWith
         allData
-
-
-mockList : Places
-mockList =
-    [ { name = "Shopping Aldeota"
-      , location =
-            { lat = -3.7316221
-            , lng = -38.5007595
-            }
-      }
-    , { name = "Shopping Del Paseo"
-      , location =
-            { lat = -3.734473
-            , lng = -38.503402
-            }
-      }
-    , { name = "Shopping Iguatemi"
-      , location =
-            { lat = -3.7355923
-            , lng = -38.5175581
-            }
-      }
-    , { name = "Via Sul"
-      , location =
-            { lat = -3.7947486
-            , lng = -38.4821157
-            }
-      }
-    ]
